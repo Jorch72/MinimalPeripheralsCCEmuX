@@ -11,7 +11,7 @@ public class IronNoteblock extends MinimalPeripheral {
         super("iron_noteblock");
 
         newMethod("test", o -> {
-            SoundSystem.instance.playSound("minecraft:sounds/note/harp.ogg", 1.0f, 1.0f);
+            SoundSystem.instance.playSound("minecraft:sounds/note/harp.ogg", 1, 1.0f);
             return new Object[]{};
         });
 
@@ -40,7 +40,7 @@ public class IronNoteblock extends MinimalPeripheral {
             if (!SoundSystem.instance.soundExists(sound))
                 throw new LuaException("Bad argument #1 (sound does not exist)");
 
-            SoundSystem.instance.playSound(sound, pitch, volume);
+            SoundSystem.instance.playSound(sound, 1f / pitch, volume);
             return new Object[]{};
         });
 

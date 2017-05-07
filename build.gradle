@@ -23,13 +23,18 @@ repositories {
         artifactPattern 'https://addons-origin.cursecdn.com/files/2291/384/[module][revision].[ext]'
     }
 
+    ivy {
+        name = "tarsosdsp"
+        artifactPattern "https://0110.be/releases/TarsosDSP/[module]-[revision]/[module]-[revision].[ext]"
+    }
+
     maven {
         name = "squiddev"
         url = "https://dl.bintray.com/squiddev/maven"
     }
 
     maven {
-        url "https://jitpack.io"
+        url "https://jitpack.io" // for importing github projects
     }
 }
 
@@ -46,6 +51,9 @@ dependencies {
 
     compile 'com.google.guava:guava:20.0'
     compile 'com.google.code.gson:gson:2.8.0'
+
+    compile group: 'org.jcraft', name: 'jorbis', version: '0.0.17'
+    compile ":TarsosDSP:2.4"
 }
 
 shadowJar {
