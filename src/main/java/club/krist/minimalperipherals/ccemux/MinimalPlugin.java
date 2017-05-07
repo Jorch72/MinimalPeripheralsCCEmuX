@@ -46,11 +46,11 @@ public class MinimalPlugin extends Plugin {
     
     @Override
     public Optional<PluginConfigHandler<?>> getConfigHandler() {
-        return Optional.of(new JSONConfigHandler<Map<String, String>>(new HashMap<>()) {
+        return Optional.of(new JSONConfigHandler<MinimalPluginConfig>(new MinimalPluginConfig()) {
             @Override
-            public void configLoaded(Map<String, String> config) {
-                if (config.containsKey("minecraftDir")) {
-                    minecraftDirectory = Paths.get(config.get("minecraftDir"));
+            public void configLoaded(MinimalPluginConfig config) {
+                if (config.minecraftDir != null) {
+                    minecraftDirectory = Paths.get(config.minecraftDir);
                 }
             }
         });
