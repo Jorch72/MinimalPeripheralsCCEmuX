@@ -42,6 +42,7 @@ public class SoundSystem {
             sound = soundCache.get(soundName);
         } else {
             sound = new Sound(soundName);
+            soundCache.put(soundName, sound);
         }
         
         Thread audioThread = new Thread(() -> {
