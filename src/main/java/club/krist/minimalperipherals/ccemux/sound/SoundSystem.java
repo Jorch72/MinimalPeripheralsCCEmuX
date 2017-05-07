@@ -39,50 +39,54 @@ public class SoundSystem {
         if (!soundFile.exists()) {
             throw new RuntimeException("Sound " + sound + " doesn't exist");
         }
-    
-        try (
-            OggInputStream is = new OggInputStream(new FileInputStream(soundFile));
-        ) {
-            int sampleRate = is.getSampleRate();
-            int channels = is.getChannels();
-            pitch = 1 / pitch;
-            
-            AudioFormat oggFormat = new AudioFormat((float) sampleRate, 16, channels, true, false);
-            RateTransposer rateTransposer = new RateTransposer(pitch);
-            WaveformSimilarityBasedOverlapAdd wsola = new WaveformSimilarityBasedOverlapAdd(
-                WaveformSimilarityBasedOverlapAdd.Parameters.musicDefaults(pitch, sampleRate)
-            );
-            
-            AudioDispatcher dsp = AudioDispatcherFactory.fromByteArray(
-                IOUtils.toByteArray(is),
-                oggFormat,
-                wsola.getInputBufferSize() * oggFormat.getChannels(),
-                wsola.getOverlap() * oggFormat.getChannels()
-            );
-            
-            AudioPlayer audioPlayer = new AudioPlayer(oggFormat);
-    
-            dsp.addAudioProcessor(wsola);
-            dsp.addAudioProcessor(rateTransposer);
-            dsp.addAudioProcessor(audioPlayer);
-            dsp.addAudioProcessor(new AudioProcessor() {
-                @Override
-                public void processingFinished() {
-                    if (!dsp.isStopped()) {
-                        dsp.stop();
-                    }
-                }
         
-                @Override
-                public boolean process(AudioEvent audioEvent) {
-                    return true;
-                }
-            });
+        Thread audioThread = new Thread(() -> {
+            try (
+                OggInputStream is = new OggInputStream(new FileInputStream(soundFile));
+            ) {
+                int sampleRate = is.getSampleRate();
+                int channels = is.getChannels();
+                float newPitch = 1 / pitch;
+        
+                AudioFormat oggFormat = new AudioFormat((float) sampleRate, 16, channels, true, false);
+                RateTransposer rateTransposer = new RateTransposer(newPitch);
+                WaveformSimilarityBasedOverlapAdd wsola = new WaveformSimilarityBasedOverlapAdd(
+                    WaveformSimilarityBasedOverlapAdd.Parameters.musicDefaults(newPitch, sampleRate)
+                );
+        
+                AudioDispatcher dsp = AudioDispatcherFactory.fromByteArray(
+                    IOUtils.toByteArray(is),
+                    oggFormat,
+                    wsola.getInputBufferSize() * oggFormat.getChannels(),
+                    wsola.getOverlap() * oggFormat.getChannels()
+                );
+        
+                AudioPlayer audioPlayer = new AudioPlayer(oggFormat);
+        
+                dsp.addAudioProcessor(rateTransposer);
+                dsp.addAudioProcessor(wsola);
+                dsp.addAudioProcessor(audioPlayer);
+                dsp.addAudioProcessor(new AudioProcessor() {
+                    @Override
+                    public void processingFinished() {
+                        if (!dsp.isStopped()) {
+                            dsp.stop();
+                        }
+                    }
             
-            dsp.run();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+                    @Override
+                    public boolean process(AudioEvent audioEvent) {
+                        return true;
+                    }
+                });
+        
+                dsp.run();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        
+        audioThread.start();
     }
 
     public boolean soundExists(String sound) {
