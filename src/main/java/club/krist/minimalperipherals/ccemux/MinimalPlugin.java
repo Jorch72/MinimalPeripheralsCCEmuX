@@ -4,7 +4,7 @@ import club.krist.minimalperipherals.ccemux.sound.SoundSystem;
 import net.clgd.ccemux.peripherals.PeripheralFactory;
 import net.clgd.ccemux.plugins.Plugin;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class MinimalPlugin extends Plugin {
@@ -36,6 +36,13 @@ public class MinimalPlugin extends Plugin {
     @Override
     public void setup() {
         PeripheralFactory.implementations.put("iron_noteblock", IronNoteblock::new);
-        new SoundSystem(new File("[APPDATA]/.minecraft/assets"), "1.11");
+        
+        Path minecraftDirectory = OperatingSystem.get().getAppDataDir().resolve(".minecraft");
+        
+        if (!minecraftDirectory.toFile().exists()) {
+            throw new RuntimeException("Minecraft directory not found."); // TODO: config option
+        }
+        
+        new SoundSystem(minecraftDirectory.resolve("assets").toFile(), "1.11");
     }
 }

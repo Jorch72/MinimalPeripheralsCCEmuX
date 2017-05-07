@@ -27,6 +27,10 @@ repositories {
         name = "squiddev"
         url = "https://dl.bintray.com/squiddev/maven"
     }
+
+    maven {
+        url "https://jitpack.io"
+    }
 }
 
 dependencies {
