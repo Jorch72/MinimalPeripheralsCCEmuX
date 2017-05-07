@@ -1,0 +1,64 @@
+
+plugins {
+    id 'java-library'
+    id 'com.github.johnrengelman.shadow' version '1.2.4'
+    id 'eclipse'
+    id 'idea'
+}
+
+group = 'net.clgd'
+version = '1.0-SNAPSHOT'
+
+eclipse.project {
+    natures 'org.eclipse.buildship.core.gradleprojectnature'
+    natures 'org.springsource.ide.eclipse.gradle.core.nature'
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+
+    ivy {
+        name = 'computercraft'
+        artifactPattern 'https://addons-origin.cursecdn.com/files/2291/384/[module][revision].[ext]'
+    }
+
+    maven {
+        name = "squiddev"
+        url = "https://dl.bintray.com/squiddev/maven"
+    }
+
+    maven { url = "https://oss.sonatype.org/content/repositories/snapshots/" }
+
+    maven { url = "https://oss.sonatype.org/content/repositories/releases/" }
+
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compile ":ComputerCraft:1.79"
+
+    compile "com.github.justync7:CCEmuX:master-SNAPSHOT"
+
+    compile 'org.slf4j:slf4j-simple:1.7.21'
+
+    compile 'commons-io:commons-io:2.5'
+    compile 'commons-cli:commons-cli:1.3.1'
+    compile 'commons-codec:commons-codec:1.10'
+
+    compile 'org.squiddev:cctweaks-lua:1.4.0'
+
+    compile 'com.google.guava:guava:20.0'
+    compile 'com.google.code.gson:gson:2.8.0'
+
+    testCompile 'junit:junit:4.12'
+}
+
+shadowJar {
+    classifier = null
+
+    exclude '*.html'
+    exclude 'META-INF/maven/*/*/*.*'
+}
+
+build.dependsOn shadowJar
