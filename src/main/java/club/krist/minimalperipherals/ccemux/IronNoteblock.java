@@ -11,7 +11,10 @@ public class IronNoteblock extends MinimalPeripheral {
         super("iron_noteblock");
 
         newMethod("test", o -> {
-            SoundSystem.instance.playSound("minecraft:sounds/note/harp.ogg", 1, 1.0f);
+            SoundSystem.instance.playSound("minecraft:sounds/note/harp.ogg", 1.0f, 1.0f);
+            SoundSystem.instance.playSound("minecraft:sounds/note/harp.ogg", 1.05946f, 1.0f);
+            SoundSystem.instance.playSound("minecraft:sounds/note/harp.ogg", 1.12246f, 1.0f);
+            SoundSystem.instance.playSound("minecraft:sounds/note/harp.ogg", 1.18929f, 1.0f);
             return new Object[]{};
         });
 

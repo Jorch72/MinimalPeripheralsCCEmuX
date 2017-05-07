@@ -3,8 +3,11 @@ package club.krist.minimalperipherals.ccemux.sound;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
+import be.tarsos.dsp.WaveformSimilarityBasedOverlapAdd;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.dsp.io.jvm.AudioPlayer;
+import be.tarsos.dsp.io.jvm.WaveformWriter;
+import be.tarsos.dsp.resample.RateTransposer;
 import club.krist.minimalperipherals.ccemux.OggInputStream;
 import club.krist.minimalperipherals.ccemux.ResourceIndex;
 import org.apache.commons.io.IOUtils;
@@ -31,8 +34,6 @@ public class SoundSystem {
      * @param volume The volume of the sound between 0 and 1.
      */
     public void playSound(String sound, float pitch, float volume) {
-        //TODO: implement
-        
         File soundFile = resourceIndex.getFile(sound);
         
         if (!soundFile.exists()) {
@@ -44,24 +45,32 @@ public class SoundSystem {
         ) {
             int sampleRate = is.getSampleRate();
             int channels = is.getChannels();
+            pitch = 1 / pitch;
             
             AudioFormat oggFormat = new AudioFormat((float) sampleRate, 16, channels, true, false);
+            RateTransposer rateTransposer = new RateTransposer(pitch);
+            WaveformSimilarityBasedOverlapAdd wsola = new WaveformSimilarityBasedOverlapAdd(
+                WaveformSimilarityBasedOverlapAdd.Parameters.musicDefaults(pitch, sampleRate)
+            );
             
             AudioDispatcher dsp = AudioDispatcherFactory.fromByteArray(
                 IOUtils.toByteArray(is),
                 oggFormat,
-                1024,
-                1024 / 2
+                wsola.getInputBufferSize() * oggFormat.getChannels(),
+                wsola.getOverlap() * oggFormat.getChannels()
             );
             
             AudioPlayer audioPlayer = new AudioPlayer(oggFormat);
-            
+    
+            dsp.addAudioProcessor(wsola);
+            dsp.addAudioProcessor(rateTransposer);
             dsp.addAudioProcessor(audioPlayer);
             dsp.addAudioProcessor(new AudioProcessor() {
                 @Override
                 public void processingFinished() {
-                    if (!dsp.isStopped())
+                    if (!dsp.isStopped()) {
                         dsp.stop();
+                    }
                 }
         
                 @Override
