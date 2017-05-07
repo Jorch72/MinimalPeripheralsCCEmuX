@@ -5,19 +5,23 @@ import net.clgd.ccemux.peripherals.PeripheralFactory;
 import net.clgd.ccemux.plugins.Plugin;
 import net.clgd.ccemux.plugins.config.JSONConfigHandler;
 import net.clgd.ccemux.plugins.config.PluginConfigHandler;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class MinimalPlugin extends Plugin {
     private static final Logger log = LoggerFactory.getLogger(MinimalPlugin.class);
     
-    private Path minecraftDirectory;
+    private MinimalPluginConfig config;
     
     @Override
     public String getName() {
@@ -49,9 +53,7 @@ public class MinimalPlugin extends Plugin {
         return Optional.of(new JSONConfigHandler<MinimalPluginConfig>(new MinimalPluginConfig()) {
             @Override
             public void configLoaded(MinimalPluginConfig config) {
-                if (config.minecraftDir != null) {
-                    minecraftDirectory = Paths.get(config.minecraftDir);
-                }
+               MinimalPlugin.this.config = config;
             }
         });
     }
@@ -59,17 +61,36 @@ public class MinimalPlugin extends Plugin {
     @Override
     public void setup() {
         PeripheralFactory.implementations.put("iron_noteblock", IronNoteblock::new);
+    
+        Path assetsDirectory = OperatingSystem.get().getAppDataDir().resolve(".minecraft/assets");
         
-        if (minecraftDirectory == null) {
-            minecraftDirectory = OperatingSystem.get().getAppDataDir().resolve(".minecraft");
+        if (config.minecraftDir != null) {
+            assetsDirectory = Paths.get(config.minecraftDir);
         }
         
-        if (!minecraftDirectory.toFile().exists()) {
+        if (!assetsDirectory.toFile().exists()) {
             throw new RuntimeException("Minecraft directory not found.");
         }
         
-        log.info("Loading minecraft assets from {}", minecraftDirectory.toString());
+        AtomicReference<String> indexName = new AtomicReference<>(config.minecraftVersion);
         
-        new SoundSystem(minecraftDirectory.resolve("assets").toFile(), "1.11");
+        if (config.minecraftVersion == null) {
+            try {
+                Files.list(assetsDirectory.resolve("indexes"))
+					.filter(Files::isRegularFile)
+                    .map(Path::toFile)
+                    .filter(f -> FilenameUtils.getExtension(f.getName()).equalsIgnoreCase("json"))
+                    .map(f -> FilenameUtils.getBaseName(f.getName()))
+					.sorted(Comparator.reverseOrder())
+					.findFirst()
+					.ifPresent(indexName::set);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        
+        log.info("Loading minecraft assets from {}, index {}", assetsDirectory.toString(), indexName.get());
+        
+        new SoundSystem(assetsDirectory.toFile(), "1.11");
     }
 }
