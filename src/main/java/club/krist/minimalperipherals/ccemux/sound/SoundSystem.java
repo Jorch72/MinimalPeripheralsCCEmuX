@@ -72,6 +72,7 @@ public class SoundSystem {
                     }
                 });
                 dsp.addAudioProcessor(pitchShifter);
+                dsp.addAudioProcessor(new GainProcessor(volume));
                 dsp.addAudioProcessor(new AudioPlayer(sound.getFormat()));
                 dsp.addAudioProcessor(new AudioProcessor() {
                     @Override
