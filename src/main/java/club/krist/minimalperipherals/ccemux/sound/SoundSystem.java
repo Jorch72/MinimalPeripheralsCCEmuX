@@ -1,21 +1,17 @@
 package club.krist.minimalperipherals.ccemux.sound;
 
 import be.tarsos.dsp.AudioDispatcher;
-import be.tarsos.dsp.io.TarsosDSPAudioInputStream;
+import be.tarsos.dsp.AudioEvent;
+import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.dsp.io.jvm.AudioPlayer;
-import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import club.krist.minimalperipherals.ccemux.OggInputStream;
 import club.krist.minimalperipherals.ccemux.ResourceIndex;
 import org.apache.commons.io.IOUtils;
 
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 
 public class SoundSystem {
     public static SoundSystem instance;
@@ -49,15 +45,7 @@ public class SoundSystem {
             int sampleRate = is.getSampleRate();
             int channels = is.getChannels();
             
-            AudioFormat oggFormat = new AudioFormat(
-                AudioFormat.Encoding.PCM_SIGNED,
-                sampleRate,
-                16,
-                channels,
-                channels * 2,
-                sampleRate,
-                true
-            );
+            AudioFormat oggFormat = new AudioFormat((float) sampleRate, 16, channels, true, false);
             
             AudioDispatcher dsp = AudioDispatcherFactory.fromByteArray(
                 IOUtils.toByteArray(is),
@@ -67,7 +55,21 @@ public class SoundSystem {
             );
             
             AudioPlayer audioPlayer = new AudioPlayer(oggFormat);
+            
             dsp.addAudioProcessor(audioPlayer);
+            dsp.addAudioProcessor(new AudioProcessor() {
+                @Override
+                public void processingFinished() {
+                    if (!dsp.isStopped())
+                        dsp.stop();
+                }
+        
+                @Override
+                public boolean process(AudioEvent audioEvent) {
+                    return true;
+                }
+            });
+            
             dsp.run();
         } catch (Exception e) {
             throw new RuntimeException(e);
