@@ -3,6 +3,7 @@ package club.krist.minimalperipherals.ccemux.sound;
 import be.tarsos.dsp.*;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.dsp.io.jvm.AudioPlayer;
+import club.krist.minimalperipherals.ccemux.MinimalPluginConfig;
 import club.krist.minimalperipherals.ccemux.OggInputStream;
 import club.krist.minimalperipherals.ccemux.ResourceIndex;
 import org.apache.commons.io.IOUtils;
@@ -23,10 +24,13 @@ public class SoundSystem {
     private int bufferSize = 1024;
     private int bufferOverlap = 1024 - 128;
 
-    public SoundSystem(File assetsFolder, String indexName) {
+    public SoundSystem(MinimalPluginConfig config, File assetsFolder, String indexName) {
         resourceIndex = new ResourceIndex(assetsFolder, indexName);
 
         instance = this;
+        
+        bufferSize = config.soundBufferSize;
+        bufferOverlap = config.soundBufferOverlap;
     }
     
     /**
