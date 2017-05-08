@@ -90,6 +90,6 @@ public class MinimalPlugin extends Plugin {
         
         log.info("Loading minecraft assets from {}, index {}", assetsDirectory.toString(), indexName.get());
         
-        new SoundSystem(assetsDirectory.toFile(), "1.11");
+        new SoundSystem(config, assetsDirectory.toFile(), "1.11");
     }
 }
