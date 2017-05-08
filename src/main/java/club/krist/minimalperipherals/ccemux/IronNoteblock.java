@@ -6,6 +6,7 @@ import dan200.computercraft.api.peripheral.IComputerAccess;
 
 
 public class IronNoteblock extends MinimalPeripheral {
+    private static final String[] instruments = {"harp", "bd", "snare", "hat", "bassattack"};
 
     public IronNoteblock() {
         super("iron_noteblock");
@@ -38,13 +39,26 @@ public class IronNoteblock extends MinimalPeripheral {
             }
 
             if (!SoundSystem.instance.soundExists(sound))
-                throw new LuaException("Bad argument #1 (sound does not exist)");
+                throw new LuaException("Bad argument #1 (sound does not exist) " + sound);
 
             SoundSystem.instance.playSound(sound, pitch, volume);
             return new Object[]{};
         });
 
-        //TODO: playNote
+        newMethod("playNote", arguments -> {
+            if (arguments.length < 2)
+                throw new LuaException("Wrong number of arguments. 2 expected.");
+            if (!(arguments[0] instanceof Double))
+                throw new LuaException("Bad argument #1 (expected number)");
+            if (!(arguments[1] instanceof Double))
+                throw new LuaException("Bad argument #2 (expected number)");
+
+            String instrument = "minecraft:sounds/note/" + instruments[(int) (double) (Double) arguments[0]] + ".ogg";
+            float note = (float) Math.pow(2D, ((int) (double) (Double) arguments[1] - 12) / 12D);
+
+            SoundSystem.instance.playSound(instrument, note, 3f);
+            return new Object[]{};
+        });
     }
 
     public void attach(IComputerAccess iComputerAccess) {
